@@ -1,1 +1,18 @@
 import "./globals.css";
+
+export const metadata = {
+  title: "Athena OS",
+  description: "AI Investment Operating System",
+};
+
+export default function RootLayout({
+  children,
+}: {
+  children: React.ReactNode;
+}) {
+  return (
+    <html lang="en">
+      <body>{children}</body>
+    </html>
+  );
+}
