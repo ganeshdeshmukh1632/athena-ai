@@ -1,9 +1,9 @@
 import json
-import re
 
 from openai import OpenAI
 
 from app.core.config import settings
+from app.data.nse_symbols import NIFTY_50
 from app.models.schemas import AnalyzeRequest, AnalyzeResponse
 from app.services.market_data import get_stock_snapshot
 
@@ -26,23 +26,22 @@ If real market data is provided in the user message, use it directly and \
 cite it in your evidence. If no market data is provided, say plainly that \
 you don't have current price data rather than guessing numbers."""
 
-# crude symbol guesser — matches known NSE tickers mentioned in FEATURES.md examples;
-# will be replaced by a proper NLP/lookup step later
-KNOWN_SYMBOLS = {
-    "RELIANCE": ["reliance"],
-    "TCS": ["tcs"],
-    "INFY": ["infosys", "infy"],
-    "HDFCBANK": ["hdfc bank", "hdfcbank"],
-    "ICICIBANK": ["icici bank", "icicibank"],
-}
-
 
 def guess_symbol(question: str) -> str | None:
+    """
+    Finds the best-matching NSE symbol mentioned in a question.
+    Checks longer aliases first so "hdfc bank" wins over a bare "hdfc".
+    """
     q = question.lower()
-    for symbol, aliases in KNOWN_SYMBOLS.items():
-        if any(alias in q for alias in aliases):
-            return symbol
-    return None
+    candidates = []
+    for symbol, aliases in NIFTY_50.items():
+        for alias in aliases:
+            if alias in q:
+                candidates.append((len(alias), symbol))
+    if not candidates:
+        return None
+    candidates.sort(reverse=True)  # longest alias match wins
+    return candidates[0][1]
 
 
 class AthenaOrchestrator:
