@@ -21,3 +21,4 @@ class AnalyzeResponse(BaseModel):
     technical: AgentBreakdown | None = None
     fundamental: AgentBreakdown | None = None
     risk: AgentBreakdown | None = None
+    news: AgentBreakdown | None = None

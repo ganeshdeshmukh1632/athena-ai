@@ -56,6 +56,20 @@ export default function EvidencePanel({ result }: { result: AnalyzeResponse | nu
         </div>
       )}
 
+      {result.news && (
+        <div className="mb-6 border-t border-slate-800 pt-4">
+          <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">
+            News
+          </h3>
+          <p className="mb-2 text-sm text-slate-300">{result.news.analysis}</p>
+          <ul className="space-y-1 text-xs text-slate-400">
+            {result.news.evidence.map((e, i) => (
+              <li key={i}>• {e}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
       {result.risk && (
         <div className="mb-6 border-t border-slate-800 pt-4">
           <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-slate-500">

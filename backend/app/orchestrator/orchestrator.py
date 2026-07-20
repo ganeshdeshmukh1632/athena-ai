@@ -3,12 +3,14 @@ import json
 from openai import OpenAI
 
 from app.agents.fundamental_agent import FundamentalAgent
+from app.agents.news_agent import NewsAgent
 from app.agents.risk_agent import RiskAgent
 from app.agents.technical_agent import TechnicalAgent
 from app.core.config import settings
 from app.data.nse_symbols import NIFTY_50
 from app.models.schemas import AgentBreakdown, AnalyzeRequest, AnalyzeResponse
 from app.services.market_data import get_stock_snapshot
+from app.services.news_data import get_recent_news
 
 GENERAL_SYSTEM_PROMPT = """You are a financial analysis assistant inside \
 Athena AI, an investment research tool. You do NOT give guaranteed \
@@ -52,6 +54,7 @@ class AthenaOrchestrator:
         self.technical_agent = TechnicalAgent(self.client)
         self.fundamental_agent = FundamentalAgent(self.client)
         self.risk_agent = RiskAgent(self.client)
+        self.news_agent = NewsAgent(self.client)
 
     def _run_general(self, question: str) -> AnalyzeResponse:
         completion = self.client.chat.completions.create(
@@ -68,25 +71,31 @@ class AthenaOrchestrator:
 
     def _run_with_market_data(self, symbol: str, question: str) -> AnalyzeResponse:
         snapshot = get_stock_snapshot(symbol)
+        headlines = get_recent_news(NIFTY_50[symbol])
 
         technical = self.technical_agent.run(snapshot)
         fundamental = self.fundamental_agent.run(snapshot)
         risk = self.risk_agent.run(snapshot)
+        news = self.news_agent.run(headlines)
 
-        summary = f"{technical['analysis']} {fundamental['analysis']}"
-        evidence = technical["evidence"] + fundamental["evidence"]
+        summary = f"{technical['analysis']} {fundamental['analysis']} {news['analysis']}"
+        evidence = technical["evidence"] + fundamental["evidence"] + news["evidence"]
         risks = risk["risks"]
         confidence = round(
-            (technical["confidence"] + fundamental["confidence"] + risk["confidence"]) / 3,
+            (technical["confidence"] + fundamental["confidence"] + risk["confidence"] + news["confidence"]) / 4,
             2,
         )
+
+        sources = [f"Live market data for {symbol}", "Technical Agent", "Fundamental Agent", "Risk Agent", "News Agent"]
+        if headlines:
+            sources.append(f"{len(headlines)} recent headline(s)")
 
         return AnalyzeResponse(
             summary=summary,
             evidence=evidence,
             risks=risks,
             confidence=confidence,
-            sources=[f"Live market data for {symbol}", "Technical Agent", "Fundamental Agent", "Risk Agent"],
+            sources=sources,
             technical=AgentBreakdown(
                 analysis=technical["analysis"],
                 evidence=technical["evidence"],
@@ -100,6 +109,11 @@ class AthenaOrchestrator:
             risk=AgentBreakdown(
                 risks=risk["risks"],
                 confidence=risk["confidence"],
+            ),
+            news=AgentBreakdown(
+                analysis=news["analysis"],
+                evidence=news["evidence"],
+                confidence=news["confidence"],
             ),
         )
 

@@ -14,6 +14,7 @@ export interface AnalyzeResponse {
   technical?: AgentBreakdown;
   fundamental?: AgentBreakdown;
   risk?: AgentBreakdown;
+  news?: AgentBreakdown;
 }
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
