@@ -7,6 +7,9 @@ class Settings(BaseSettings):
     cors_origins: list[str] = ["*"]
     groq_api_key: str = ""
     database_url: str = ""
+    jwt_secret_key: str = ""
+    jwt_algorithm: str = "HS256"
+    jwt_expire_minutes: int = 60 * 24 * 7  # 7 days
 
     class Config:
         env_file = ".env"

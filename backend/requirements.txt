@@ -10,3 +10,8 @@ feedparser
 sqlalchemy
 psycopg2-binary
 rapidfuzz
+python-jose[cryptography]
+python-multipart
+email-validator
+passlib[bcrypt]
+bcrypt==4.0.1
