@@ -1,13 +1,14 @@
 import json
 
 from openai import OpenAI
+from rapidfuzz import fuzz, process
 
 from app.agents.fundamental_agent import FundamentalAgent
 from app.agents.news_agent import NewsAgent
 from app.agents.risk_agent import RiskAgent
 from app.agents.technical_agent import TechnicalAgent
 from app.core.config import settings
-from app.data.nse_symbols import NIFTY_50
+from app.data.nse_symbols import ALL_SYMBOLS
 from app.models.schemas import AgentBreakdown, AnalyzeRequest, AnalyzeResponse
 from app.services.market_data import get_stock_snapshot
 from app.services.news_data import get_recent_news
@@ -31,18 +32,41 @@ no extra text) matching exactly this shape:
 You have no market data for this question. Say so plainly rather than \
 guessing numbers."""
 
+# Build a flat lookup: alias -> symbol, for fuzzy matching
+ALIAS_TO_SYMBOL = {}
+for symbol, aliases in ALL_SYMBOLS.items():
+    for alias in aliases:
+        ALIAS_TO_SYMBOL[alias] = symbol
+
+FUZZY_MATCH_THRESHOLD = 72  # 0-100, higher = stricter
+
 
 def guess_symbol(question: str) -> str | None:
     q = question.lower()
+
+    # 1. Exact substring match first (fast, precise)
     candidates = []
-    for symbol, aliases in NIFTY_50.items():
+    for symbol, aliases in ALL_SYMBOLS.items():
         for alias in aliases:
             if alias in q:
                 candidates.append((len(alias), symbol))
-    if not candidates:
-        return None
-    candidates.sort(reverse=True)
-    return candidates[0][1]
+    if candidates:
+        candidates.sort(reverse=True)
+        return candidates[0][1]
+
+    # 2. Fuzzy fallback for typos (e.g. "reliense" -> "reliance")
+    words = q.split()
+    best_match = None
+    best_score = 0
+    for word in words:
+        if len(word) < 4:
+            continue
+        match = process.extractOne(word, ALIAS_TO_SYMBOL.keys(), scorer=fuzz.ratio)
+        if match and match[1] > best_score and match[1] >= FUZZY_MATCH_THRESHOLD:
+            best_score = match[1]
+            best_match = ALIAS_TO_SYMBOL[match[0]]
+
+    return best_match
 
 
 class AthenaOrchestrator:
@@ -71,7 +95,7 @@ class AthenaOrchestrator:
 
     def _run_with_market_data(self, symbol: str, question: str) -> AnalyzeResponse:
         snapshot = get_stock_snapshot(symbol)
-        headlines = get_recent_news(NIFTY_50[symbol])
+        headlines = get_recent_news(ALL_SYMBOLS[symbol])
 
         technical = self.technical_agent.run(snapshot)
         fundamental = self.fundamental_agent.run(snapshot)

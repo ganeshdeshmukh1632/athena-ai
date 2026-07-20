@@ -9,3 +9,4 @@ yfinance
 feedparser
 sqlalchemy
 psycopg2-binary
+rapidfuzz
