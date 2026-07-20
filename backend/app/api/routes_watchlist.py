@@ -2,9 +2,10 @@ from fastapi import APIRouter, Depends, HTTPException
 from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
+from app.api.routes_auth import get_current_user
 from app.core.database import get_db
 from app.data.nse_symbols import ALL_SYMBOLS
-from app.models.db_models import WatchlistItem
+from app.models.db_models import User, WatchlistItem
 from app.services.market_data import get_stock_snapshot
 
 router = APIRouter(prefix="/api/v1/watchlist", tags=["watchlist"])
@@ -15,8 +16,16 @@ class WatchlistAddRequest(BaseModel):
 
 
 @router.get("")
-def list_watchlist(db: Session = Depends(get_db)):
-    items = db.query(WatchlistItem).order_by(WatchlistItem.added_at.desc()).all()
+def list_watchlist(
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    items = (
+        db.query(WatchlistItem)
+        .filter(WatchlistItem.user_id == current_user.id)
+        .order_by(WatchlistItem.added_at.desc())
+        .all()
+    )
     results = []
     for item in items:
         try:
@@ -33,16 +42,24 @@ def list_watchlist(db: Session = Depends(get_db)):
 
 
 @router.post("")
-def add_to_watchlist(request: WatchlistAddRequest, db: Session = Depends(get_db)):
+def add_to_watchlist(
+    request: WatchlistAddRequest,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
     symbol = request.symbol.upper()
     if symbol not in ALL_SYMBOLS:
         raise HTTPException(status_code=400, detail=f"Unknown symbol: {symbol}")
 
-    existing = db.query(WatchlistItem).filter(WatchlistItem.symbol == symbol).first()
+    existing = (
+        db.query(WatchlistItem)
+        .filter(WatchlistItem.user_id == current_user.id, WatchlistItem.symbol == symbol)
+        .first()
+    )
     if existing:
         raise HTTPException(status_code=400, detail=f"{symbol} is already on your watchlist")
 
-    item = WatchlistItem(symbol=symbol)
+    item = WatchlistItem(user_id=current_user.id, symbol=symbol)
     db.add(item)
     db.commit()
     db.refresh(item)
@@ -50,8 +67,16 @@ def add_to_watchlist(request: WatchlistAddRequest, db: Session = Depends(get_db)
 
 
 @router.delete("/{item_id}")
-def remove_from_watchlist(item_id: int, db: Session = Depends(get_db)):
-    item = db.query(WatchlistItem).filter(WatchlistItem.id == item_id).first()
+def remove_from_watchlist(
+    item_id: int,
+    db: Session = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    item = (
+        db.query(WatchlistItem)
+        .filter(WatchlistItem.id == item_id, WatchlistItem.user_id == current_user.id)
+        .first()
+    )
     if not item:
         raise HTTPException(status_code=404, detail="Watchlist item not found")
     db.delete(item)
