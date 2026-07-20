@@ -1,3 +1,5 @@
+import HistoryList from "@/components/workspace/HistoryList";
+
 const NAV_ITEMS = [
   "Dashboard",
   "AI Workspace",
@@ -8,9 +10,15 @@ const NAV_ITEMS = [
   "Settings",
 ];
 
-export default function Sidebar() {
+export default function Sidebar({
+  refreshKey,
+  onSelectHistory,
+}: {
+  refreshKey: number;
+  onSelectHistory: (question: string) => void;
+}) {
   return (
-    <aside className="hidden w-56 shrink-0 border-r border-slate-800 bg-slate-950 md:block">
+    <aside className="hidden w-56 shrink-0 overflow-y-auto border-r border-slate-800 bg-slate-950 md:block">
       <nav className="flex flex-col gap-1 p-4">
         {NAV_ITEMS.map(function (item, i) {
           const activeClass = "bg-slate-800 text-white";
@@ -23,6 +31,7 @@ export default function Sidebar() {
           );
         })}
       </nav>
+      <HistoryList refreshKey={refreshKey} onSelect={onSelectHistory} />
     </aside>
   );
 }

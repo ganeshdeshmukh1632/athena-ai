@@ -1,17 +1,27 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { analyzeQuestion, type AnalyzeResponse } from "@/services/api";
 
 export default function AskAthena({
   onResult,
+  onComplete,
+  prefillQuestion,
 }: {
   onResult: (result: AnalyzeResponse | null) => void;
+  onComplete: () => void;
+  prefillQuestion: string;
 }) {
   const [question, setQuestion] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<AnalyzeResponse | null>(null);
+
+  useEffect(() => {
+    if (prefillQuestion) {
+      setQuestion(prefillQuestion);
+    }
+  }, [prefillQuestion]);
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -26,6 +36,7 @@ export default function AskAthena({
       const data = await analyzeQuestion(question);
       setResult(data);
       onResult(data);
+      onComplete();
     } catch (err) {
       setError("Something went wrong reaching Athena. Please try again.");
     } finally {
