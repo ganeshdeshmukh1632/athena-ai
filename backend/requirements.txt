@@ -7,3 +7,5 @@ anthropic==0.39.0
 openai
 yfinance
 feedparser
+sqlalchemy
+psycopg2-binary

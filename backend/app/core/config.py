@@ -6,6 +6,7 @@ class Settings(BaseSettings):
     environment: str = "development"
     cors_origins: list[str] = ["*"]
     groq_api_key: str = ""
+    database_url: str = ""
 
     class Config:
         env_file = ".env"
