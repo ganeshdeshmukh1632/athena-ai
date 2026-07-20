@@ -3,7 +3,11 @@
 import { useState } from "react";
 import { analyzeQuestion, type AnalyzeResponse } from "@/services/api";
 
-export default function AskAthena() {
+export default function AskAthena({
+  onResult,
+}: {
+  onResult: (result: AnalyzeResponse | null) => void;
+}) {
   const [question, setQuestion] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -16,10 +20,12 @@ export default function AskAthena() {
     setLoading(true);
     setError(null);
     setResult(null);
+    onResult(null);
 
     try {
       const data = await analyzeQuestion(question);
       setResult(data);
+      onResult(data);
     } catch (err) {
       setError("Something went wrong reaching Athena. Please try again.");
     } finally {
@@ -46,51 +52,14 @@ export default function AskAthena() {
         </button>
       </form>
 
-      {error && (
-        <p className="mt-4 text-sm text-red-400">{error}</p>
-      )}
+      {error && <p className="mt-4 text-sm text-red-400">{error}</p>}
 
       {result && (
-        <div className="mt-8 space-y-6 rounded-lg border border-slate-800 bg-slate-900 p-6">
-          <div>
-            <h3 className="mb-1 text-sm font-semibold uppercase tracking-wide text-slate-400">
-              Summary
-            </h3>
-            <p className="text-white">{result.summary}</p>
-          </div>
-
-          <div className="grid gap-6 sm:grid-cols-2">
-            <div>
-              <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-400">
-                Evidence
-              </h3>
-              <ul className="space-y-1 text-slate-300">
-                {result.evidence.map((item, i) => (
-                  <li key={i}>• {item}</li>
-                ))}
-              </ul>
-            </div>
-
-            <div>
-              <h3 className="mb-2 text-sm font-semibold uppercase tracking-wide text-slate-400">
-                Risks
-              </h3>
-              <ul className="space-y-1 text-slate-300">
-                {result.risks.map((item, i) => (
-                  <li key={i}>• {item}</li>
-                ))}
-              </ul>
-            </div>
-          </div>
-
-          <div className="flex items-center justify-between border-t border-slate-800 pt-4">
-            <span className="text-sm text-slate-400">
-              Confidence: {(result.confidence * 100).toFixed(0)}%
-            </span>
-            <span className="text-sm text-slate-500">
-              Sources: {result.sources.join(", ")}
-            </span>
-          </div>
+        <div className="mt-8 rounded-lg border border-slate-800 bg-slate-900 p-6">
+          <h3 className="mb-1 text-sm font-semibold uppercase tracking-wide text-slate-400">
+            Summary
+          </h3>
+          <p className="text-white">{result.summary}</p>
         </div>
       )}
     </div>

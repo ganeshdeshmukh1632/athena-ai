@@ -1,9 +1,19 @@
+export interface AgentBreakdown {
+  analysis?: string;
+  evidence: string[];
+  risks: string[];
+  confidence: number;
+}
+
 export interface AnalyzeResponse {
   summary: string;
   evidence: string[];
   risks: string[];
   confidence: number;
   sources: string[];
+  technical?: AgentBreakdown;
+  fundamental?: AgentBreakdown;
+  risk?: AgentBreakdown;
 }
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
