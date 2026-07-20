@@ -15,3 +15,11 @@ class AnalysisHistory(Base):
     confidence = Column(Float, nullable=False)
     full_response = Column(JSON, nullable=False)
     created_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+
+class WatchlistItem(Base):
+    __tablename__ = "watchlist_items"
+
+    id = Column(Integer, primary_key=True, index=True)
+    symbol = Column(String, nullable=False, unique=True, index=True)
+    added_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))

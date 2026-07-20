@@ -1,3 +1,4 @@
 {
+  "/watchlist/page": "app/watchlist/page.js",
   "/page": "app/page.js"
 }

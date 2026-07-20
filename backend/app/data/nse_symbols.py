@@ -101,7 +101,7 @@ NIFTY_NEXT_50 = {
     "TVSMOTOR": ["tvs motor"],
     "VBL": ["varun beverages"],
     "VEDL": ["vedanta"],
-    "ZOMATO": ["zomato"],
+    "ETERNAL": ["zomato", "eternal"],
 }
 
 ALL_SYMBOLS = {**NIFTY_50, **NIFTY_NEXT_50}

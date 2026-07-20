@@ -49,3 +49,47 @@ export async function getHistory(limit: number = 20): Promise<HistoryItem[]> {
   }
   return res.json();
 }
+
+export interface WatchlistSnapshot {
+  symbol: string;
+  current_price: number | null;
+  previous_close: number | null;
+  day_high: number | null;
+  day_low: number | null;
+  market_cap: number | null;
+  pe_ratio: number | null;
+  fifty_two_week_high: number | null;
+  fifty_two_week_low: number | null;
+}
+
+export interface WatchlistEntry {
+  id: number;
+  symbol: string;
+  added_at: string;
+  snapshot: WatchlistSnapshot | null;
+}
+
+export async function getWatchlist(): Promise<WatchlistEntry[]> {
+  const res = await fetch(`${API_BASE_URL}/api/v1/watchlist`);
+  if (!res.ok) throw new Error("Failed to load watchlist");
+  return res.json();
+}
+
+export async function addToWatchlist(symbol: string): Promise<void> {
+  const res = await fetch(`${API_BASE_URL}/api/v1/watchlist`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ symbol }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || "Failed to add to watchlist");
+  }
+}
+
+export async function removeFromWatchlist(id: number): Promise<void> {
+  const res = await fetch(`${API_BASE_URL}/api/v1/watchlist/${id}`, {
+    method: "DELETE",
+  });
+  if (!res.ok) throw new Error("Failed to remove from watchlist");
+}
