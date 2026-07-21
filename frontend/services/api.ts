@@ -130,3 +130,55 @@ export async function removeFromWatchlist(id: number): Promise<void> {
   });
   if (!res.ok) throw new Error("Failed to remove from watchlist");
 }
+
+export interface HoldingEntry {
+  id: number;
+  symbol: string;
+  quantity: number;
+  buy_price: number;
+  current_price: number | null;
+  invested: number;
+  current_value: number | null;
+  pnl: number | null;
+  pnl_pct: number | null;
+  added_at: string;
+}
+
+export interface PortfolioResponse {
+  holdings: HoldingEntry[];
+  total_invested: number;
+  total_current_value: number;
+  total_pnl: number;
+}
+
+export async function getPortfolio(): Promise<PortfolioResponse> {
+  const res = await fetch(`${API_BASE_URL}/api/v1/portfolio`, {
+    headers: authHeaders(),
+  });
+  if (!res.ok) throw new Error("Failed to load portfolio");
+  return res.json();
+}
+
+export async function addHolding(
+  symbol: string,
+  quantity: number,
+  buyPrice: number
+): Promise<void> {
+  const res = await fetch(`${API_BASE_URL}/api/v1/portfolio`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify({ symbol, quantity, buy_price: buyPrice }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || "Failed to add holding");
+  }
+}
+
+export async function removeHolding(id: number): Promise<void> {
+  const res = await fetch(`${API_BASE_URL}/api/v1/portfolio/${id}`, {
+    method: "DELETE",
+    headers: authHeaders(),
+  });
+  if (!res.ok) throw new Error("Failed to remove holding");
+}

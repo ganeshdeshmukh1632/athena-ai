@@ -4,13 +4,13 @@ import HistoryList from "@/components/workspace/HistoryList";
 import { navigateWithPrefix } from "@/lib/auth";
 
 const NAV_ITEMS = [
-  { label: "Dashboard", href: "/" },
+  { label: "Dashboard", href: "/dashboard" },
   { label: "AI Workspace", href: "/" },
-  { label: "Research", href: "/" },
-  { label: "Markets", href: "/" },
-  { label: "Portfolio", href: "/" },
+  { label: "Research", href: "/research" },
+  { label: "Markets", href: "/markets" },
+  { label: "Portfolio", href: "/portfolio" },
   { label: "Watchlists", href: "/watchlist" },
-  { label: "Settings", href: "/" },
+  { label: "Settings", href: "/settings" },
 ];
 
 export default function Sidebar({

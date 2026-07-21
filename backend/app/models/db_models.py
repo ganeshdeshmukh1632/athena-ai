@@ -35,3 +35,14 @@ class WatchlistItem(Base):
     user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
     symbol = Column(String, nullable=False, index=True)
     added_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
+
+
+class Holding(Base):
+    __tablename__ = "holdings"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False, index=True)
+    symbol = Column(String, nullable=False, index=True)
+    quantity = Column(Float, nullable=False)
+    buy_price = Column(Float, nullable=False)
+    added_at = Column(DateTime, default=lambda: datetime.now(timezone.utc))
