@@ -36,3 +36,23 @@
 - Nginx reverse proxy routing `/api/*` → backend (port 8000), everything else → frontend (port 3000)
 - HTTPS via free Let's Encrypt certificate (Certbot), auto-renewing
 - GitHub for version control
+
+## Process Management (PM2)
+Both frontend and backend run under PM2 in production:
+```
+cd ~/athena-ai/frontend && pm2 start npm --name "athena-frontend" -- start
+cd ~/athena-ai/backend && pm2 start "venv/bin/uvicorn app.main:app --host 0.0.0.0 --port 8000" --name "athena-backend"
+pm2 save
+```
+PM2 is configured to auto-start both on server reboot (via `pm2 startup systemd`).
+
+Useful commands:
+- `pm2 status` — check both processes
+- `pm2 logs athena-backend` / `pm2 logs athena-frontend` — view logs
+- `pm2 restart athena-backend` — restart after a backend code change
+- `pm2 restart athena-frontend` — restart after a frontend code change (requires `npm run build` first)
+
+Frontend note: production mode requires an explicit rebuild after any code change:
+```
+cd ~/athena-ai/frontend && npm run build && pm2 restart athena-frontend
+```

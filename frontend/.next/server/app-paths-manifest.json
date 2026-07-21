@@ -1,6 +1,12 @@
 {
   "/_not-found/page": "app/_not-found/page.js",
-  "/watchlist/page": "app/watchlist/page.js",
+  "/dashboard/page": "app/dashboard/page.js",
+  "/login/page": "app/login/page.js",
+  "/markets/page": "app/markets/page.js",
+  "/page": "app/page.js",
+  "/portfolio/page": "app/portfolio/page.js",
+  "/register/page": "app/register/page.js",
   "/research/page": "app/research/page.js",
-  "/page": "app/page.js"
+  "/settings/page": "app/settings/page.js",
+  "/watchlist/page": "app/watchlist/page.js"
 }
