@@ -6,6 +6,7 @@ from app.api.routes_auth import get_current_user
 from app.core.database import get_db
 from app.data.nse_symbols import ALL_SYMBOLS
 from app.models.db_models import User, WatchlistItem
+from app.orchestrator.orchestrator import guess_symbol
 from app.services.market_data import get_stock_snapshot
 
 router = APIRouter(prefix="/api/v1/watchlist", tags=["watchlist"])
@@ -13,6 +14,16 @@ router = APIRouter(prefix="/api/v1/watchlist", tags=["watchlist"])
 
 class WatchlistAddRequest(BaseModel):
     symbol: str
+
+
+def resolve_symbol(raw: str) -> str:
+    candidate = raw.strip().upper()
+    if candidate in ALL_SYMBOLS:
+        return candidate
+    guessed = guess_symbol(raw)
+    if guessed:
+        return guessed
+    raise HTTPException(status_code=400, detail=f"Couldn't recognize symbol: {raw}")
 
 
 @router.get("")
@@ -47,9 +58,7 @@ def add_to_watchlist(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    symbol = request.symbol.upper()
-    if symbol not in ALL_SYMBOLS:
-        raise HTTPException(status_code=400, detail=f"Unknown symbol: {symbol}")
+    symbol = resolve_symbol(request.symbol)
 
     existing = (
         db.query(WatchlistItem)

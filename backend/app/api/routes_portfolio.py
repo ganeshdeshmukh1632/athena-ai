@@ -3,8 +3,8 @@ from pydantic import BaseModel
 from sqlalchemy.orm import Session
 
 from app.api.routes_auth import get_current_user
+from app.api.routes_watchlist import resolve_symbol
 from app.core.database import get_db
-from app.data.nse_symbols import ALL_SYMBOLS
 from app.models.db_models import Holding, User
 from app.services.market_data import get_stock_snapshot
 
@@ -76,9 +76,7 @@ def add_holding(
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
-    symbol = request.symbol.upper()
-    if symbol not in ALL_SYMBOLS:
-        raise HTTPException(status_code=400, detail=f"Unknown symbol: {symbol}")
+    symbol = resolve_symbol(request.symbol)
     if request.quantity <= 0 or request.buy_price <= 0:
         raise HTTPException(status_code=400, detail="Quantity and buy price must be positive")
 
