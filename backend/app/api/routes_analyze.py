@@ -1,8 +1,9 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Request
 from sqlalchemy.orm import Session
 
 from app.api.routes_auth import get_current_user
 from app.core.database import get_db
+from app.core.limiter import limiter
 from app.models.db_models import AnalysisHistory, User
 from app.models.schemas import AnalyzeRequest, AnalyzeResponse
 from app.orchestrator.orchestrator import guess_symbol, orchestrator
@@ -11,17 +12,19 @@ router = APIRouter(prefix="/api/v1", tags=["analyze"])
 
 
 @router.post("/analyze", response_model=AnalyzeResponse)
+@limiter.limit("10/minute")
 def analyze(
-    request: AnalyzeRequest,
+    request: Request,
+    body: AnalyzeRequest,
     db: Session = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ) -> AnalyzeResponse:
-    result = orchestrator.run(request)
+    result = orchestrator.run(body)
 
     history_entry = AnalysisHistory(
         user_id=current_user.id,
-        question=request.question,
-        symbol=guess_symbol(request.question),
+        question=body.question,
+        symbol=guess_symbol(body.question),
         summary=result.summary,
         confidence=result.confidence,
         full_response=result.model_dump(),
