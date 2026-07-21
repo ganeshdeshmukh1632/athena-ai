@@ -26,30 +26,6 @@ export interface HistoryItem {
   created_at: string;
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
-
-export async function analyzeQuestion(question: string): Promise<AnalyzeResponse> {
-  const res = await fetch(`${API_BASE_URL}/api/v1/analyze`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ question }),
-  });
-
-  if (!res.ok) {
-    throw new Error(`Analyze request failed: ${res.status}`);
-  }
-
-  return res.json();
-}
-
-export async function getHistory(limit: number = 20): Promise<HistoryItem[]> {
-  const res = await fetch(`${API_BASE_URL}/api/v1/history?limit=${limit}`);
-  if (!res.ok) {
-    throw new Error(`History request failed: ${res.status}`);
-  }
-  return res.json();
-}
-
 export interface WatchlistSnapshot {
   symbol: string;
   current_price: number | null;
@@ -69,8 +45,68 @@ export interface WatchlistEntry {
   snapshot: WatchlistSnapshot | null;
 }
 
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? "";
+
+function getToken(): string | null {
+  if (typeof window === "undefined") return null;
+  return localStorage.getItem("athena_token");
+}
+
+function authHeaders(): Record<string, string> {
+  const token = getToken();
+  return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
+export async function registerUser(email: string, password: string): Promise<string> {
+  const res = await fetch(`${API_BASE_URL}/api/v1/auth/register`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || "Registration failed");
+  }
+  const data = await res.json();
+  return data.access_token;
+}
+
+export async function loginUser(email: string, password: string): Promise<string> {
+  const res = await fetch(`${API_BASE_URL}/api/v1/auth/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ email, password }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || "Login failed");
+  }
+  const data = await res.json();
+  return data.access_token;
+}
+
+export async function analyzeQuestion(question: string): Promise<AnalyzeResponse> {
+  const res = await fetch(`${API_BASE_URL}/api/v1/analyze`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...authHeaders() },
+    body: JSON.stringify({ question }),
+  });
+  if (!res.ok) throw new Error(`Analyze request failed: ${res.status}`);
+  return res.json();
+}
+
+export async function getHistory(limit: number = 20): Promise<HistoryItem[]> {
+  const res = await fetch(`${API_BASE_URL}/api/v1/history?limit=${limit}`, {
+    headers: authHeaders(),
+  });
+  if (!res.ok) throw new Error(`History request failed: ${res.status}`);
+  return res.json();
+}
+
 export async function getWatchlist(): Promise<WatchlistEntry[]> {
-  const res = await fetch(`${API_BASE_URL}/api/v1/watchlist`);
+  const res = await fetch(`${API_BASE_URL}/api/v1/watchlist`, {
+    headers: authHeaders(),
+  });
   if (!res.ok) throw new Error("Failed to load watchlist");
   return res.json();
 }
@@ -78,7 +114,7 @@ export async function getWatchlist(): Promise<WatchlistEntry[]> {
 export async function addToWatchlist(symbol: string): Promise<void> {
   const res = await fetch(`${API_BASE_URL}/api/v1/watchlist`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: { "Content-Type": "application/json", ...authHeaders() },
     body: JSON.stringify({ symbol }),
   });
   if (!res.ok) {
@@ -90,6 +126,7 @@ export async function addToWatchlist(symbol: string): Promise<void> {
 export async function removeFromWatchlist(id: number): Promise<void> {
   const res = await fetch(`${API_BASE_URL}/api/v1/watchlist/${id}`, {
     method: "DELETE",
+    headers: authHeaders(),
   });
   if (!res.ok) throw new Error("Failed to remove from watchlist");
 }

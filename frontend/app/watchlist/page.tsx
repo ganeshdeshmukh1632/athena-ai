@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useAuth, navigateWithPrefix } from "@/lib/auth";
 import Navbar from "@/components/layout/Navbar";
 import Sidebar from "@/components/layout/Sidebar";
 import {
@@ -16,6 +17,13 @@ export default function WatchlistPage() {
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [refreshKey, setRefreshKey] = useState(0);
+  const { isAuthenticated } = useAuth();
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      navigateWithPrefix("/login");
+    }
+  }, [isAuthenticated]);
 
   function loadWatchlist() {
     setLoading(true);
@@ -26,8 +34,10 @@ export default function WatchlistPage() {
   }
 
   useEffect(() => {
-    loadWatchlist();
-  }, []);
+    if (isAuthenticated) {
+      loadWatchlist();
+    }
+  }, [isAuthenticated]);
 
   async function handleAdd(e: React.FormEvent) {
     e.preventDefault();
@@ -47,6 +57,8 @@ export default function WatchlistPage() {
     await removeFromWatchlist(id);
     loadWatchlist();
   }
+
+  if (!isAuthenticated) return null;
 
   return (
     <main className="flex h-screen flex-col bg-slate-950">

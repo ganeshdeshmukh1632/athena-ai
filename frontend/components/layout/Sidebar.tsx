@@ -1,5 +1,7 @@
-import Link from "next/link";
+"use client";
+
 import HistoryList from "@/components/workspace/HistoryList";
+import { navigateWithPrefix } from "@/lib/auth";
 
 const NAV_ITEMS = [
   { label: "Dashboard", href: "/" },
@@ -22,13 +24,13 @@ export default function Sidebar({
     <aside className="hidden w-56 shrink-0 overflow-y-auto border-r border-slate-800 bg-slate-950 md:block">
       <nav className="flex flex-col gap-1 p-4">
         {NAV_ITEMS.map((item) => (
-          <Link
+          <button
             key={item.label}
-            href={item.href}
-            className="rounded-md px-3 py-2 text-sm text-slate-400 hover:bg-slate-900 hover:text-white"
+            onClick={() => navigateWithPrefix(item.href)}
+            className="rounded-md px-3 py-2 text-left text-sm text-slate-400 hover:bg-slate-900 hover:text-white"
           >
             {item.label}
-          </Link>
+          </button>
         ))}
       </nav>
       <HistoryList refreshKey={refreshKey} onSelect={onSelectHistory} />
