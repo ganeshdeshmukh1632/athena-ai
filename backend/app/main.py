@@ -5,6 +5,7 @@ from slowapi.errors import RateLimitExceeded
 
 from app.api.routes_analyze import router as analyze_router
 from app.api.routes_auth import router as auth_router
+from app.api.routes_options import router as options_router
 from app.api.routes_portfolio import router as portfolio_router
 from app.api.routes_watchlist import router as watchlist_router
 from app.core.config import settings
@@ -25,6 +26,7 @@ app.add_middleware(
 app.include_router(analyze_router)
 app.include_router(watchlist_router)
 app.include_router(portfolio_router)
+app.include_router(options_router)
 app.include_router(auth_router)
 
 

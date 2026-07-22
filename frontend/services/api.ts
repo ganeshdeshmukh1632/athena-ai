@@ -182,3 +182,31 @@ export async function removeHolding(id: number): Promise<void> {
   });
   if (!res.ok) throw new Error("Failed to remove holding");
 }
+
+export interface ChartAnalysisResult {
+  identified_chart: string;
+  recommendation: "CALL" | "PUT" | "NEUTRAL";
+  reasoning: string;
+  evidence: string[];
+  risks: string[];
+  confidence: number;
+}
+
+export async function analyzeChart(file: File): Promise<ChartAnalysisResult> {
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const token = getToken();
+  const res = await fetch(`${API_BASE_URL}/api/v1/options/analyze`, {
+    method: "POST",
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+    body: formData,
+  });
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail || "Chart analysis failed");
+  }
+
+  return res.json();
+}

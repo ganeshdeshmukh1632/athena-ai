@@ -9,6 +9,7 @@ const NAV_ITEMS = [
   { label: "Research", href: "/research" },
   { label: "Markets", href: "/markets" },
   { label: "Portfolio", href: "/portfolio" },
+  { label: "Options", href: "/options" },
   { label: "Watchlists", href: "/watchlist" },
   { label: "Settings", href: "/settings" },
 ];

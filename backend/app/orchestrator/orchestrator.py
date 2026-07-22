@@ -82,7 +82,7 @@ class AthenaOrchestrator:
 
     def _run_general(self, question: str) -> AnalyzeResponse:
         completion = self.client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+            model="openai/gpt-oss-120b",
             max_tokens=1024,
             messages=[
                 {"role": "system", "content": GENERAL_SYSTEM_PROMPT},
